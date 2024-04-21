@@ -23,7 +23,6 @@ class PerceptronModel(Module):
         class (+1) or not (-1). `dimensions` is the dimensionality of the data.
         For example, dimensions=2 would mean that the perceptron must classify
         2D points.
-
         In order for our autograder to detect your weight, initialize it as a 
         pytorch Parameter object as follows:
 
@@ -37,8 +36,26 @@ class PerceptronModel(Module):
         super(PerceptronModel, self).__init__()
         
         "*** YOUR CODE HERE ***"
-        self.w = None #Initialize your weights here
+        # self.w = None #Initialize your weights here
+        self.w = Parameter(ones(1, dimensions)) # dimensions should be an int
+        # self.layer = Linear(length of input vector, length of output vector)
+        # call with: self.layer(input)
+        # relu(input)
+        # movedim(input_vector, initial_dimension_position, final_dimension_position)
+        # cross_entropy(prediction, target)
+        # mse_loss(prediction, target)
+
+
+        # self.w = zeros(1, dimensions)
         # todo
+        # This should initialize the weight parameter in 
+        # PerceptronModel. 
+        # Note that here, you should make sure that your 
+        # weight variable is saved as a Parameter() object 
+        # of dimension 1 by dimensions. 
+        # This is so that our autograder, as well as pytorch, 
+        # recognize your weight as a parameter of your model.
+
 
     def get_weights(self):
         """
@@ -58,6 +75,12 @@ class PerceptronModel(Module):
         """
         "*** YOUR CODE HERE ***"
         # todo
+        # This should compute the dot product of the 
+        # stored weight vector and the given input, 
+        # returning an Tensor object.
+        return tensordot(self.get_weights(), x)
+        
+
 
 
     def get_prediction(self, x):
@@ -68,7 +91,11 @@ class PerceptronModel(Module):
         """
         "*** YOUR CODE HERE ***"
         # todo
-
+        # should return 1 if the dot product is non-negative or −1 otherwise.
+        if (self.run(x) >= 0):
+            return 1
+        return -1
+    
 
 
     def train(self, dataset):
@@ -83,7 +110,22 @@ class PerceptronModel(Module):
         with no_grad():
             dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
             "*** YOUR CODE HERE ***"
+            isAccurate = True # set to true at the beginning of each iteration of dataLoader; set to false on inaccurate classification
+            for batch in dataloader:
+                print(batch)
+                # training data
+                # {‘x’:features, ‘label’:label} with label 
+                # being the value(s) we want to predict based 
+                # off of the features.
+                # do a run on data 
             # todo
+            # This should repeatedly loop over the data set 
+            # and make updates on examples that are 
+            # misclassified. 
+            # When an entire pass over the data set is 
+            # completed without making any mistakes, 
+            # 100% training accuracy has been achieved, 
+            # and training can terminate.
 
 
 
