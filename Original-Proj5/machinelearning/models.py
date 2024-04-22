@@ -27,6 +27,7 @@ class PerceptronModel(object):
         Returns: a node containing a single number (the score)
         """
         "*** YOUR CODE HERE ***"
+        return nn.DotProduct(self.get_weights(), x)
 
     def get_prediction(self, x):
         """
@@ -35,12 +36,44 @@ class PerceptronModel(object):
         Returns: 1 or -1
         """
         "*** YOUR CODE HERE ***"
+        run_result = self.run(x)
+        run_val = nn.as_scalar(run_result)
+        if (run_val >= 0):
+            return 1
+        return -1
 
     def train(self, dataset):
         """
         Train the perceptron until convergence.
         """
         "*** YOUR CODE HERE ***"
+        isNotAccurate = True
+        while (isNotAccurate):
+            isNotAccurate = False
+            batch_size = 1
+            for features, label in dataset.iterate_once(batch_size):
+                prediction = self.get_prediction(features) # scalar
+                # print("Label type: ", type(label))
+                actual_val = nn.as_scalar(label)
+                if (actual_val > 0 and prediction > 0):
+                    # expects positive and got positive
+                    update_multiplier = prediction * actual_val
+                elif (actual_val > 0 and prediction < 0):
+                    # expects positive and got negative
+                    update_multiplier = abs(prediction) * actual_val
+                elif (actual_val < 0 and prediction < 0):
+                    # expects negative and got negative
+                    update_multiplier = prediction * actual_val * -1
+                elif (actual_val < 0 and prediction > 0):
+                    # expects negative and got positive
+                    update_multiplier = prediction * actual_val
+                else:
+                    update_multiplier = 0 # debugging purposes; should never trigger
+                if (not prediction == nn.as_scalar(label)):
+                    isNotAccurate = True
+                    # print("flagged inaccurate")
+                    self.w.update(features, update_multiplier)
+                # (self, direction, multiplier)
 
 class RegressionModel(object):
     """
