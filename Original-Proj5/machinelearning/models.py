@@ -223,17 +223,17 @@ class DigitClassificationModel(object):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         # initialize layer weights and bias
-        self.l1_weight = nn.Parameter(1, 200)
-        self.l2_weight = nn.Parameter(200, 300)
+        self.l1_weight = nn.Parameter(784, 300)
+        self.l2_weight = nn.Parameter(300, 150)
         # self.l3_weight = nn.Parameter(500, 300)
         # self.l4_weight = nn.Parameter(300, 1)
-        self.l3_weight = nn.Parameter(300, 1)
-        self.l1_bias = nn.Parameter(1, 200)
-        self.l2_bias = nn.Parameter(1, 300)
-        self.l3_bias = nn.Parameter(1, 1)
+        self.l3_weight = nn.Parameter(150, 10)
+        self.l1_bias = nn.Parameter(1, 300)
+        self.l2_bias = nn.Parameter(1, 150)
+        self.l3_bias = nn.Parameter(1, 10)
         self.batch_size = 10
         self.learning_rate = 0.005 * -1 # multiplier is -1 * learning rate
-        self.loss_function = nn.SquareLoss
+        self.loss_function = nn.SoftmaxLoss
 
 
     def run(self, x):
@@ -251,6 +251,19 @@ class DigitClassificationModel(object):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        l1_vals = nn.Linear(x, self.l1_weight)
+        l1_vals = nn.AddBias(l1_vals, self.l1_bias)
+        l1_vals = nn.ReLU(l1_vals)
+
+        l2_vals = nn.Linear(l1_vals, self.l2_weight)
+        l2_vals = nn.AddBias(l2_vals, self.l2_bias)
+        l2_vals = nn.ReLU(l2_vals)
+
+        l3_vals = nn.Linear(l2_vals, self.l3_weight)
+        l3_vals = nn.AddBias(l3_vals, self.l3_bias)
+        # l3_vals = nn.ReLU(l3_vals)
+
+        return l3_vals
 
     def get_loss(self, x, y):
         """
@@ -266,12 +279,29 @@ class DigitClassificationModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        # nn.SquareLoss as the loss
+        # x is input
+        # need to make prediction before calling squared loss
+        loss = self.loss_function(self.run(x), y)
+        return loss
+        
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        minimum_accuracy = 0.98
+        while (dataset.get_validation_accuracy() < minimum_accuracy):
+            batch_size = self.batch_size
+            for features, label in dataset.iterate_once(batch_size):
+                loss = self.get_loss(features, label) # scalar
+                parameters = [self.l1_weight, self.l1_bias, self.l2_weight, self.l2_bias, self.l3_weight, self.l3_bias]
+                gradients = nn.gradients(loss, parameters)
+                current_loss = nn.as_scalar(loss)
+                for i in range(len(parameters)):
+                    parameters[i].update(gradients[i], self.learning_rate)
+                
 
 class LanguageIDModel(object):
     """
@@ -291,6 +321,18 @@ class LanguageIDModel(object):
 
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        # initialize layer weights and bias
+        self.l1_weight = nn.Parameter(784, 300)
+        self.l2_weight = nn.Parameter(300, 150)
+        # self.l3_weight = nn.Parameter(500, 300)
+        # self.l4_weight = nn.Parameter(300, 1)
+        self.l3_weight = nn.Parameter(150, 10)
+        self.l1_bias = nn.Parameter(1, 300)
+        self.l2_bias = nn.Parameter(1, 150)
+        self.l3_bias = nn.Parameter(1, 10)
+        self.batch_size = 10
+        self.learning_rate = 0.005 * -1 # multiplier is -1 * learning rate
+        self.loss_function = nn.SoftmaxLoss
 
     def run(self, xs):
         """
@@ -322,6 +364,17 @@ class LanguageIDModel(object):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        l1_vals = nn.Linear(xs, self.l1_weight)
+        l1_vals = nn.AddBias(l1_vals, self.l1_bias)
+        l1_vals = nn.ReLU(l1_vals)
+
+        l2_vals = nn.Linear(l1_vals, self.l2_weight)
+        l2_vals = nn.AddBias(l2_vals, self.l2_bias)
+        l2_vals = nn.ReLU(l2_vals)
+
+        l3_vals = nn.Linear(l2_vals, self.l3_weight)
+        l3_vals = nn.AddBias(l3_vals, self.l3_bias)
+        # l3_vals = nn.ReLU(l3_vals)
 
     def get_loss(self, xs, y):
         """
@@ -338,9 +391,22 @@ class LanguageIDModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        loss = self.loss_function(self.run(xs), y)
+        return loss
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        minimum_accuracy = 0.98
+        while (dataset.get_validation_accuracy() < minimum_accuracy):
+            batch_size = self.batch_size
+            for features, label in dataset.iterate_once(batch_size):
+                loss = self.get_loss(features, label) # scalar
+                parameters = [self.l1_weight, self.l1_bias, self.l2_weight, self.l2_bias, self.l3_weight, self.l3_bias]
+                gradients = nn.gradients(loss, parameters)
+                current_loss = nn.as_scalar(loss)
+                for i in range(len(parameters)):
+                    parameters[i].update(gradients[i], self.learning_rate)
+              
