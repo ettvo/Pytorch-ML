@@ -322,15 +322,16 @@ class LanguageIDModel(object):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         # initialize layer weights and bias
+        self.batch_size = len(self.languages)
         self.l1_weight = nn.Parameter(self.num_chars, 300)
-        self.l2_weight = nn.Parameter(300, 150)
+        self.l2_weight = nn.Parameter(300, 450)
         # self.l3_weight = nn.Parameter(500, 300)
         # self.l4_weight = nn.Parameter(300, 1)
-        self.l3_weight = nn.Parameter(150, 10)
+        self.l3_weight = nn.Parameter(450, self.batch_size)
         self.l1_bias = nn.Parameter(1, 300)
-        self.l2_bias = nn.Parameter(1, 150)
-        self.l3_bias = nn.Parameter(1, 10)
-        self.batch_size = 10
+        self.l2_bias = nn.Parameter(1, 450)
+        self.l3_bias = nn.Parameter(1, self.batch_size)
+        
         self.learning_rate = 0.007 * -1 # multiplier is -1 * learning rate
         self.loss_function = nn.SoftmaxLoss
 
@@ -362,19 +363,29 @@ class LanguageIDModel(object):
         Returns:
             A node with shape (batch_size x 5) containing predicted scores
                 (also called logits)
+
+        xs[1] is the list of every letter at index 1(or the 2nd letter) in each word in the batch. This is because every column of xs, is a word, not each row. So if you wanted to get the word cat, which is the 7th word in the batch, you'd do something like xs[:,7]which gets every letter in the 7th column of x. 
+        Also, to address your example of xs[1][7], this wouldn't be the one hot encoding of the entire word cat. the word cat would be made up of 3 different one hot encoding, each one representing a single letter. This allows you to keep the order information.
+        >> Thanks! So, xs here actually has a length of 3(which is the length of 'cat'). And xs[0] contains 1 at (7,2) representing c ,xs[1]contains 1 at (7,0) representing a and xs[2] contains 1 at (7,19) representing t. Is it right?
+        Exactly! This helps with the forward() function since it lets you go through multiple words at the same time.
         """
         "*** YOUR CODE HERE ***"
-        l1_vals = nn.Linear(xs, self.l1_weight)
-        l1_vals = nn.AddBias(l1_vals, self.l1_bias)
-        l1_vals = nn.ReLU(l1_vals)
+        # vector_summary = nn.Linear(nn.DataNode(xs[0].data), self.l1_weight)
 
-        l2_vals = nn.Linear(l1_vals, self.l2_weight)
-        l2_vals = nn.AddBias(l2_vals, self.l2_bias)
-        l2_vals = nn.ReLU(l2_vals)
+        vector_summary = nn.Linear(xs)
+        for word in xs:
+            curr_word_l1 = nn.Add(nn.Linear(word, self.l1_weight), vector_summary)
+            curr_word_l1 = nn.AddBias(curr_word_l1, self.l1_bias)
+            curr_word_l1 = nn.ReLU(curr_word_l1)
 
-        l3_vals = nn.Linear(l2_vals, self.l3_weight)
-        l3_vals = nn.AddBias(l3_vals, self.l3_bias)
-        # l3_vals = nn.ReLU(l3_vals)
+            curr_word_l2 = nn.Linear(curr_word_l1, self.l2_weight)
+            curr_word_l2 = nn.AddBias(curr_word_l2, self.l2_bias)
+            vector_summary = nn.ReLU(curr_word_l2)
+
+        curr_word_l3 = nn.Linear(vector_summary, self.l3_weight)
+        curr_word_l3 = nn.AddBias(curr_word_l3, self.l3_bias)
+        # no ReLu at end
+        return curr_word_l3
 
     def get_loss(self, xs, y):
         """
