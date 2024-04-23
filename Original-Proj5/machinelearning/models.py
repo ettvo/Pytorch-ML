@@ -323,13 +323,17 @@ class LanguageIDModel(object):
         "*** YOUR CODE HERE ***"
         # initialize layer weights and bias
         self.batch_size = len(self.languages)
+        # self.l1_weight = nn.Parameter(self.num_chars, 300)
         self.l1_weight = nn.Parameter(self.num_chars, 300)
-        self.l2_weight = nn.Parameter(300, 450)
+        # self.l2_weight = nn.Parameter(300, 450)
+        self.l2_weight = nn.Parameter(300, 300)
         # self.l3_weight = nn.Parameter(500, 300)
         # self.l4_weight = nn.Parameter(300, 1)
-        self.l3_weight = nn.Parameter(450, self.batch_size)
+        # self.l3_weight = nn.Parameter(450, self.batch_size)
+        self.l3_weight = nn.Parameter(300, self.batch_size)
+
         self.l1_bias = nn.Parameter(1, 300)
-        self.l2_bias = nn.Parameter(1, 450)
+        self.l2_bias = nn.Parameter(1, 300)
         self.l3_bias = nn.Parameter(1, self.batch_size)
         
         self.learning_rate = 0.007 * -1 # multiplier is -1 * learning rate
@@ -370,11 +374,13 @@ class LanguageIDModel(object):
         Exactly! This helps with the forward() function since it lets you go through multiple words at the same time.
         """
         "*** YOUR CODE HERE ***"
-        # vector_summary = nn.Linear(nn.DataNode(xs[0].data), self.l1_weight)
+        # vector_summary = xs[0] # 1x47
+        # print(type(xs[0]))
 
-        vector_summary = nn.Linear(xs)
+        vector_summary = nn.Linear(xs[0], self.l1_weight)
         for word in xs:
-            curr_word_l1 = nn.Add(nn.Linear(word, self.l1_weight), vector_summary)
+            curr_word_l1 = nn.Linear(word, self.l1_weight)
+            curr_word_l1 = nn.Add(curr_word_l1, vector_summary)
             curr_word_l1 = nn.AddBias(curr_word_l1, self.l1_bias)
             curr_word_l1 = nn.ReLU(curr_word_l1)
 
