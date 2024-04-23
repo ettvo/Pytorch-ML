@@ -100,7 +100,7 @@ class RegressionModel(object):
         self.l2_bias = nn.Parameter(1, 300)
         self.l3_bias = nn.Parameter(1, 1)
         self.batch_size = 10
-        self.learning_rate = 0.005 * -1 # multiplier is -1 * learning rate
+        self.learning_rate = 0.007 * -1 # multiplier is -1 * learning rate
         self.loss_function = nn.SquareLoss
 
         # Curious on how to get the multiplier value for train q2 when calling update, as well as how to use the nn.Relu function
@@ -190,7 +190,7 @@ class RegressionModel(object):
         """
         "*** YOUR CODE HERE ***"
         current_loss = float('inf')
-        max_loss = 0.015 
+        max_loss = 0.010 
         while (current_loss > max_loss):
             batch_size = self.batch_size
             for features, label in dataset.iterate_once(batch_size):
@@ -322,7 +322,7 @@ class LanguageIDModel(object):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         # initialize layer weights and bias
-        self.l1_weight = nn.Parameter(784, 300)
+        self.l1_weight = nn.Parameter(self.num_chars, 300)
         self.l2_weight = nn.Parameter(300, 150)
         # self.l3_weight = nn.Parameter(500, 300)
         # self.l4_weight = nn.Parameter(300, 1)
@@ -331,7 +331,7 @@ class LanguageIDModel(object):
         self.l2_bias = nn.Parameter(1, 150)
         self.l3_bias = nn.Parameter(1, 10)
         self.batch_size = 10
-        self.learning_rate = 0.005 * -1 # multiplier is -1 * learning rate
+        self.learning_rate = 0.007 * -1 # multiplier is -1 * learning rate
         self.loss_function = nn.SoftmaxLoss
 
     def run(self, xs):
