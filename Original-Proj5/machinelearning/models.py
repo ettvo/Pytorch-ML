@@ -53,7 +53,6 @@ class PerceptronModel(object):
             batch_size = 1
             for features, label in dataset.iterate_once(batch_size):
                 prediction = self.get_prediction(features) # scalar
-                # print("Label type: ", type(label))
                 actual_val = nn.as_scalar(label)
                 if (actual_val > 0 and prediction > 0):
                     # expects positive and got positive
@@ -71,19 +70,71 @@ class PerceptronModel(object):
                     update_multiplier = 0 # debugging purposes; should never trigger
                 if (not prediction == nn.as_scalar(label)):
                     isNotAccurate = True
-                    # print("flagged inaccurate")
                     self.w.update(features, update_multiplier)
-                # (self, direction, multiplier)
+
 
 class RegressionModel(object):
     """
     A neural network model for approximating a function that maps from real
     numbers to real numbers. The network should be sufficiently large to be able
     to approximate sin(x) on the interval [-2pi, 2pi] to reasonable precision.
+
+    Recommended values:
+
+    Hidden layer sizes: between 100 and 500.
+    Batch size: between 1 and 128. For Q2 and Q3, we require that total size of the dataset be evenly divisible by the batch size.
+    Learning rate: between 0.0001 and 0.01.
+    Number of hidden layers: between 1 and 3(It’s especially important that you start small here).
+
     """
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        # initialize layer weights and bias
+        self.l1_weight = nn.Parameter(1, 200)
+        self.l2_weight = nn.Parameter(200, 300)
+        # self.l3_weight = nn.Parameter(500, 300)
+        # self.l4_weight = nn.Parameter(300, 1)
+        self.l3_weight = nn.Parameter(300, 1)
+        self.l1_bias = nn.Parameter(1, 200)
+        self.l2_bias = nn.Parameter(1, 300)
+        self.l3_bias = nn.Parameter(1, 1)
+        self.batch_size = 10
+        self.learning_rate = 0.005 * -1 # multiplier is -1 * learning rate
+        self.loss_function = nn.SquareLoss
+
+        # Curious on how to get the multiplier value for train q2 when calling update, as well as how to use the nn.Relu function
+        # The multiplayer is based on your learning rate, so it should be -1 * learning rate. 
+        # And you can call relu just by passing in your layer’s output. We have an example in the provided code II in the spec.
+        
+        # self.lossFunction 
+        # activation function: relu
+        # y = Constant(3, 11, 10, 18) # not actual input; its the label
+        # m = nn.Parameter(2, 1) # input
+        # b = nn.Parameter(1, 1) # expected output
+        # multiplier = 1 # learning rate
+        
+        # # predictions
+        # xm = nn.Linear(x, m)
+        # predicted_y = nn.AddBias(xm, b)
+        # # minimize square loss
+        # loss = nn.SquareLoss(predicted_y, y)
+        # grad_wrt_m, grad_wrt_b = nn.gradients(loss, [m, b])
+        # m.update(grad_wrt_m, multiplier)
+        # b.update(grad_wrt_b, multiplier)
+        # # loop to perform gradient updates
+
+
+
+        # f(x)=relu(x⋅W1​+b1​)⋅W2​+b2​
+        # where we have parameter matrices W1​ and W2​ 
+        # and parameter vectors b1​ and b2​ to learn
+        # during gradient descent. W1​ will be an i×h 
+        # matrix, where i is the dimension of our input
+        # vectors x, and h is the hidden layer size. 
+        # b1​ will be a size h vector. 
+        # need to initialize hidden layers
+
 
     def run(self, x):
         """
@@ -95,6 +146,21 @@ class RegressionModel(object):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+        # does it return constant?
+        l1_vals = nn.Linear(x, self.l1_weight)
+        l1_vals = nn.AddBias(l1_vals, self.l1_bias)
+        l1_vals = nn.ReLU(l1_vals)
+
+        l2_vals = nn.Linear(l1_vals, self.l2_weight)
+        l2_vals = nn.AddBias(l2_vals, self.l2_bias)
+        l2_vals = nn.ReLU(l2_vals)
+
+        l3_vals = nn.Linear(l2_vals, self.l3_weight)
+        l3_vals = nn.AddBias(l3_vals, self.l3_bias)
+        # l3_vals = nn.ReLU(l3_vals) # need to be able to output negative numbers
+
+        return l3_vals
+        
 
     def get_loss(self, x, y):
         """
@@ -107,12 +173,37 @@ class RegressionModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        # nn.SquareLoss as the loss
+        # x is input
+        # need to make prediction before calling squared loss
+        loss = self.loss_function(self.run(x), y)
+        return loss
+        
+
+
 
     def train(self, dataset):
         """
         Trains the model.
+
+        Your implementation will receive full points if it gets a loss of 0.02 or better, averaged across all examples in the dataset.
         """
         "*** YOUR CODE HERE ***"
+        current_loss = float('inf')
+        max_loss = 0.015 
+        while (current_loss > max_loss):
+            batch_size = self.batch_size
+            for features, label in dataset.iterate_once(batch_size):
+                loss = self.get_loss(features, label) # scalar
+                parameters = [self.l1_weight, self.l1_bias, self.l2_weight, self.l2_bias, self.l3_weight, self.l3_bias]
+                gradients = nn.gradients(loss, parameters)
+                current_loss = nn.as_scalar(loss)
+                if (current_loss > max_loss): # update weights
+                    for i in range(len(parameters)):
+                        parameters[i].update(gradients[i], self.learning_rate)
+                
+
+
 
 class DigitClassificationModel(object):
     """
@@ -131,6 +222,19 @@ class DigitClassificationModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        # initialize layer weights and bias
+        self.l1_weight = nn.Parameter(1, 200)
+        self.l2_weight = nn.Parameter(200, 300)
+        # self.l3_weight = nn.Parameter(500, 300)
+        # self.l4_weight = nn.Parameter(300, 1)
+        self.l3_weight = nn.Parameter(300, 1)
+        self.l1_bias = nn.Parameter(1, 200)
+        self.l2_bias = nn.Parameter(1, 300)
+        self.l3_bias = nn.Parameter(1, 1)
+        self.batch_size = 10
+        self.learning_rate = 0.005 * -1 # multiplier is -1 * learning rate
+        self.loss_function = nn.SquareLoss
+
 
     def run(self, x):
         """
